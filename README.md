@@ -1,5 +1,4 @@
-[Helux webcode.html](https://github.com/user-attachments/files/34640282/Helux.webcode.html)
-<!DOCTYPE html>
+
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
