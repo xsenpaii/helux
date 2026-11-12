@@ -376,9 +376,12 @@
             <button onclick="closeModal()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Back to Shopping Bag</button>
         </div>
 
-        <!-- Static QR Payment Modal -->
+        <!-- Static QR Payment Modal with 1-Minute Countdown Timer -->
         <div id="modal-qr" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 shadow-2xl text-center">
-            <span class="text-[10px] font-black text-sky-600 uppercase tracking-[0.3em] mb-1 block">UPI Payment</span>
+            <div class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest mb-3">
+                <span>⏱ Complete Payment in</span>
+                <span id="qr-countdown-timer" class="text-amber-900 font-extrabold">01:00</span>
+            </div>
             <h3 class="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-1">Scan to Pay</h3>
             <p class="text-sm font-black text-slate-500 mb-5">Amount Payable: <span class="text-slate-900">₹<span id="qr-payable-amount">0</span></span></p>
             
@@ -434,6 +437,8 @@
         const SUPABASE_URL = 'https://defmcgvvhurbqjrherux.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_a-89zCu2e-P_LoNiMFF--Q_pvszCphD';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let qrTimerInterval = null;
 
         /**
          * 1. MASTER PRODUCT CATALOG
@@ -901,7 +906,7 @@
         }
 
         /**
-         * 9. UI UTILITIES & MODAL CONTROLLERS
+         * 9. UI UTILITIES, TIMER & MODAL CONTROLLERS
          */
         function toggleCartDrawer() {
             document.getElementById('cart-drawer').classList.toggle('translate-x-full');
@@ -914,7 +919,35 @@
             setTimeout(() => toast.classList.remove('active'), 2500);
         }
 
+        function startQrTimer() {
+            stopQrTimer();
+            let secondsLeft = 60;
+            const timerEl = document.getElementById('qr-countdown-timer');
+            timerEl.innerText = "01:00";
+
+            qrTimerInterval = setInterval(() => {
+                secondsLeft--;
+                const mins = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+                const secs = String(secondsLeft % 60).padStart(2, '0');
+                timerEl.innerText = `${mins}:${secs}`;
+
+                if (secondsLeft <= 0) {
+                    stopQrTimer();
+                    closeModal();
+                    triggerToast("Payment session timed out (1 min)");
+                }
+            }, 1000);
+        }
+
+        function stopQrTimer() {
+            if (qrTimerInterval) {
+                clearInterval(qrTimerInterval);
+                qrTimerInterval = null;
+            }
+        }
+
         function openModal(modalName) {
+            stopQrTimer();
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-auth').classList.add('hidden');
             document.getElementById('modal-wishlist').classList.add('hidden');
@@ -927,12 +960,14 @@
 
             if (modalName === 'qr') {
                 document.getElementById('qr-payable-amount').innerText = getCartSubtotal().toLocaleString();
+                startQrTimer();
             }
 
             document.getElementById(`modal-${modalName}`).classList.remove('hidden');
         }
 
         function closeModal() {
+            stopQrTimer();
             document.getElementById('modal-backdrop').classList.add('hidden');
         }
 
@@ -986,6 +1021,7 @@
         }
 
         async function confirmQrPayment() {
+            stopQrTimer();
             const btn = document.getElementById('confirm-payment-btn');
             btn.innerText = "Saving Order...";
             btn.disabled = true;
