@@ -310,13 +310,14 @@
     <!-- MODAL OVERLAYS -->
     <div id="modal-backdrop" class="fixed inset-0 z-[150] hidden bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
         
-        <!-- Auth Modal (Supabase Sign In + Create Account) -->
+        <!-- Auth Modal (Supabase Sign In + Create Account with Name + Update Name) -->
         <div id="modal-auth" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 sm:p-10 shadow-2xl text-center">
             <!-- Logged Out View -->
             <div id="auth-logged-out-view">
                 <h3 class="text-2xl font-black uppercase tracking-tighter mb-2 text-slate-900">Account Access</h3>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Sign in or create a new HELUX account</p>
                 
+                <input type="text" id="auth-name" placeholder="YOUR NAME (FOR NEW ACCOUNT)" class="w-full mb-3 p-4 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
                 <input type="email" id="auth-email" placeholder="EMAIL ADDRESS" class="w-full mb-3 p-4 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
                 <input type="password" id="auth-password" placeholder="PASSWORD (MIN 6 CHARS)" class="w-full mb-5 p-4 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
                 
@@ -329,8 +330,18 @@
             <!-- Logged In View -->
             <div id="auth-logged-in-view" class="hidden">
                 <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Active Session</span>
-                <h3 class="text-xl font-black tracking-tight text-slate-900 mb-2 break-all" id="logged-in-email">user@email.com</h3>
-                <p class="text-xs text-slate-500 mb-6">Your orders are linked to this account.</p>
+                <h3 class="text-2xl font-black uppercase tracking-tight text-slate-900 mb-0.5" id="logged-in-name">HELUX Member</h3>
+                <p class="text-xs font-bold text-slate-400 mb-5 break-all" id="logged-in-email">user@email.com</p>
+
+                <!-- Update Display Name Form -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 mb-5 text-left">
+                    <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest block mb-1.5">Display Name</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="update-name-input" placeholder="ENTER NEW NAME" class="flex-grow p-2.5 bg-white border border-slate-200 rounded-xl outline-none text-xs font-bold text-slate-900">
+                        <button onclick="handleSupabaseUpdateName()" class="bg-slate-900 text-white font-black px-4 py-2.5 rounded-xl uppercase text-[10px] tracking-widest hover:bg-sky-600 transition">Save</button>
+                    </div>
+                </div>
+
                 <button onclick="handleSupabaseLogout()" class="w-full bg-red-500 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg hover:bg-red-600 transition">Sign Out</button>
             </div>
 
@@ -556,8 +567,15 @@
         };
 
         /**
-         * AUTHENTICATION HANDLERS (SUPABASE)
+         * AUTHENTICATION HANDLERS (SUPABASE WITH DISPLAY NAME)
          */
+        function getUserDisplayName(user) {
+            if (!user) return 'Account';
+            const metaName = user.user_metadata?.full_name;
+            if (metaName && metaName.trim().length > 0) return metaName.trim();
+            return user.email.split('@')[0];
+        }
+
         async function checkUserSession() {
             const { data } = await db.auth.getUser();
             STATE.user = data?.user || null;
@@ -571,10 +589,12 @@
             const loggedInView = document.getElementById('auth-logged-in-view');
 
             if (STATE.user) {
-                const shortName = STATE.user.email.split('@')[0];
-                deskBtn.innerText = shortName;
-                mobBtn.innerText = shortName;
+                const displayName = getUserDisplayName(STATE.user);
+                deskBtn.innerText = displayName;
+                mobBtn.innerText = displayName;
+                document.getElementById('logged-in-name').innerText = displayName;
                 document.getElementById('logged-in-email').innerText = STATE.user.email;
+                document.getElementById('update-name-input').value = STATE.user.user_metadata?.full_name || '';
                 loggedOutView.classList.add('hidden');
                 loggedInView.classList.remove('hidden');
             } else {
@@ -586,16 +606,27 @@
         }
 
         async function handleSupabaseSignup() {
+            const fullName = document.getElementById('auth-name').value.trim();
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
 
+            if (!fullName) {
+                triggerToast("Please enter your name");
+                return;
+            }
             if (!email || password.length < 6) {
                 triggerToast("Enter valid email & 6+ char password");
                 return;
             }
 
             triggerToast("Creating Account...");
-            const { data, error } = await db.auth.signUp({ email, password });
+            const { data, error } = await db.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: fullName }
+                }
+            });
 
             if (error) {
                 triggerToast(error.message);
@@ -603,7 +634,7 @@
                 STATE.user = data.user;
                 updateAuthUI();
                 closeModal();
-                triggerToast("Account Created & Signed In!");
+                triggerToast(`Welcome, ${fullName}!`);
             }
         }
 
@@ -625,7 +656,28 @@
                 STATE.user = data.user;
                 updateAuthUI();
                 closeModal();
-                triggerToast("Welcome back to HELUX!");
+                triggerToast(`Welcome back, ${getUserDisplayName(data.user)}!`);
+            }
+        }
+
+        async function handleSupabaseUpdateName() {
+            const newName = document.getElementById('update-name-input').value.trim();
+            if (!newName) {
+                triggerToast("Enter a valid name");
+                return;
+            }
+
+            triggerToast("Updating Name...");
+            const { data, error } = await db.auth.updateUser({
+                data: { full_name: newName }
+            });
+
+            if (error) {
+                triggerToast(error.message);
+            } else {
+                STATE.user = data.user;
+                updateAuthUI();
+                triggerToast("Name Updated!");
             }
         }
 
@@ -956,6 +1008,13 @@
 
             if (modalName === 'wishlist') {
                 renderWishlistModalItems();
+            }
+
+            if (modalName === 'checkout' && STATE.user) {
+                const nameInput = document.getElementById('checkout-name');
+                if (!nameInput.value && STATE.user.user_metadata?.full_name) {
+                    nameInput.value = STATE.user.user_metadata.full_name;
+                }
             }
 
             if (modalName === 'qr') {
