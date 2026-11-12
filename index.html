@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELUX | Luxury Seascape Skincare India</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --slate-deep: #0f172a;
+            --sky-primary: #0ea5e9;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.65);
+        }
+
+        * {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Seascape Gradient Mixing Animation */
+        @keyframes seascapeGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            background: linear-gradient(-45deg, #f0f9ff, #e0f2fe, #bae6fd, #7dd3fc);
+            background-size: 400% 400%;
+            animation: seascapeGradient 15s ease infinite;
+            color: var(--slate-deep);
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* SVG Background Curves Layer */
+        .seascape-curves {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+
+        /* Top Announcement Marquee Bar */
+        .marquee-bar {
+            background: var(--slate-deep);
+            color: #ffffff;
+            padding: 9px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+        }
+
+        .marquee-track {
+            display: inline-block;
+            animation: marqueeScroll 38s linear infinite;
+        }
+
+        @keyframes marqueeScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Custom Button Styling */
+        .nav-btn {
+            border: 1.5px solid rgba(15, 23, 42, 0.18);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            padding: 7px 18px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--slate-deep);
+        }
+
+        .nav-btn:hover {
+            background: var(--slate-deep);
+            color: #ffffff;
+            border-color: var(--slate-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+        }
+
+        /* Glassmorphism Product Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(14, 165, 233, 0.08);
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        /* Horizontal Image Gallery */
+        .gallery-viewport {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .gallery-viewport::-webkit-scrollbar {
+            display: none;
+        }
+
+        .gallery-slide {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+        }
+
+        /* Gallery Dot Indicators (....) */
+        .dots-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dot-indicator {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.2);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dot-indicator.active {
+            background: var(--sky-primary);
+            width: 14px;
+            border-radius: 4px;
+        }
+
+        /* View Switching Logic */
+        .view-panel {
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        .hidden-view {
+            display: none !important;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        /* Toast Popup Notification */
+        #toast-notice {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 250;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #toast-notice.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Toast Notification -->
+    <div id="toast-notice" class="bg-slate-900 text-white px-7 py-3.5 rounded-full font-bold text-[11px] uppercase tracking-widest shadow-2xl border border-white/20">
+        Shopping Bag Updated
+    </div>
+
+    <!-- Animated Seascape Curves Background -->
+    <div class="seascape-curves">
+        <svg viewBox="0 0 1440 320" class="w-full h-full" preserveAspectRatio="none">
+            <path d="M0,160 C320,300 420,0 720,160 C1020,320 1120,0 1440,160" fill="none" stroke="white" stroke-width="2" opacity="0.6"></path>
+            <path d="M0,250 C480,150 960,350 1440,250" fill="none" stroke="white" stroke-width="1.5" opacity="0.4"></path>
+        </svg>
+    </div>
+
+    <!-- Top Announcement Marquee -->
+    <div class="marquee-bar sticky top-0 z-50 shadow-md">
+        <div class="marquee-track uppercase">
+            HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999 • 100% VEGAN & DERMATOLOGICALLY TESTED • BUY 1 GET 1 ON VITAMIN C RANGE • HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999
+        </div>
+    </div>
+
+    <!-- Persistent Header -->
+    <header class="sticky top-[32px] z-40 bg-white/40 backdrop-blur-xl border-b border-white/40 py-4 px-5 sm:px-8 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-4 sm:gap-8">
+            <h1 class="text-2xl font-black tracking-tighter text-slate-900 cursor-pointer select-none" onclick="navigateTo('home')">HELUX</h1>
+            <nav class="hidden md:flex gap-3">
+                <button onclick="navigateTo('home')" class="nav-btn">Home</button>
+                <button onclick="openModal('auth')" class="nav-btn">Account</button>
+                <button onclick="openModal('wishlist')" class="nav-btn">Wishlist (<span id="nav-wishlist-count">0</span>)</button>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="relative hidden sm:block">
+                <input type="text" id="catalog-search" oninput="handleSearch(this.value)" placeholder="SEARCH FORMULAS..." class="bg-white/30 border border-slate-900/15 rounded-full px-4 py-2 text-[10px] font-bold uppercase outline-none focus:border-slate-900 transition w-44 lg:w-60">
+            </div>
+            <button onclick="toggleCartDrawer()" class="bg-slate-900 text-white px-5 sm:px-6 py-2 rounded-full font-bold text-xs shadow-xl active:scale-95 transition flex items-center gap-2 tracking-wider">
+                BAG (<span id="nav-bag-count">0</span>)
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Sub-Header Nav -->
+    <div class="md:hidden flex justify-center gap-2.5 py-2.5 px-4 bg-white/30 backdrop-blur-md border-b border-white/30">
+        <button onclick="navigateTo('home')" class="nav-btn py-1.5 px-4">Home</button>
+        <button onclick="openModal('auth')" class="nav-btn py-1.5 px-4">Account</button>
+        <button onclick="openModal('wishlist')" class="nav-btn py-1.5 px-4">Wishlist (<span id="mobile-wishlist-count">0</span>)</button>
+    </div>
+
+    <!-- HOME VIEW (Grid + Collection Filter) -->
+    <div id="view-home" class="view-panel flex-grow">
+        <main class="max-w-7xl mx-auto p-4 sm:p-8 lg:p-10">
+            <div class="mb-10 text-center py-6 sm:py-10">
+                <h2 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-none mb-3">Ocean Glow</h2>
+                <p class="text-slate-500 text-[10px] sm:text-xs tracking-[0.4em] uppercase font-black italic mb-6">The Seascape Selection</p>
+
+                <!-- Category Filters -->
+                <div class="flex justify-center gap-2.5 overflow-x-auto no-scrollbar pb-2">
+                    <button onclick="filterCategory('All')" class="nav-btn category-filter-btn active bg-slate-900 text-white">All</button>
+                    <button onclick="filterCategory('Cream')" class="nav-btn category-filter-btn">Creams</button>
+                    <button onclick="filterCategory('Serum')" class="nav-btn category-filter-btn">Serums</button>
+                    <button onclick="filterCategory('Wash')" class="nav-btn category-filter-btn">Cleansers</button>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 lg:gap-8"></div>
+        </main>
+    </div>
+
+    <!-- PRODUCT DETAIL VIEW -->
+    <div id="view-detail" class="view-panel hidden-view flex-grow bg-white/20 backdrop-blur-3xl min-h-screen">
+        <div class="max-w-6xl mx-auto p-4 sm:p-8 lg:p-14">
+            <button onclick="navigateTo('home')" class="nav-btn mb-8 inline-flex items-center gap-2 shadow-sm">
+                ← Return to Collection
+            </button>
+            <div id="detail-page-content"></div>
+        </div>
+    </div>
+
+    <!-- SLIDE-OUT CART DRAWER -->
+    <div id="cart-drawer" class="fixed inset-y-0 right-0 z-[100] w-full sm:w-[440px] bg-white transform translate-x-full transition-transform duration-500 flex flex-col shadow-2xl">
+        <div class="p-6 sm:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <div>
+                <h3 class="font-black text-xl uppercase tracking-tighter text-slate-900">Your Bag</h3>
+                <p id="drawer-item-subtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">0 Items Selected</p>
+            </div>
+            <button onclick="toggleCartDrawer()" class="text-2xl font-light text-slate-400 hover:text-slate-900 transition">✕</button>
+        </div>
+        
+        <!-- Free Shipping Progress Bar -->
+        <div class="p-5 bg-sky-50 border-b border-sky-100">
+            <div class="flex justify-between text-[10px] font-black uppercase mb-1.5">
+                <span id="shipping-threshold-text" class="text-slate-800">Add ₹999 for Free Delivery</span>
+                <span id="shipping-threshold-percent" class="text-sky-600">0%</span>
+            </div>
+            <div class="w-full h-2 bg-white rounded-full overflow-hidden border border-sky-100">
+                <div id="shipping-threshold-bar" class="h-full bg-sky-500 transition-all duration-700" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Cart Item List -->
+        <div id="cart-drawer-items" class="flex-grow overflow-y-auto p-6 sm:p-8 space-y-4 no-scrollbar"></div>
+
+        <!-- Cart Footer -->
+        <div class="p-6 sm:p-8 border-t border-slate-100 bg-slate-50">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</p>
+                    <p class="text-3xl font-black text-slate-900">₹<span id="cart-total-amount">0</span></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Taxes Included</p>
+                </div>
+            </div>
+            <button onclick="openCheckoutModal()" class="w-full bg-slate-900 text-white font-black py-4 sm:py-5 rounded-2xl uppercase text-xs tracking-widest shadow-2xl hover:bg-sky-600 transition-all active:scale-95">
+                Proceed to Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAYS -->
+    <div id="modal-backdrop" class="fixed inset-0 z-[150] hidden bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
+        
+        <!-- Auth Modal -->
+        <div id="modal-auth" class="hidden glass-card rounded-[2.5rem] max-w-sm w-full p-8 sm:p-10 shadow-2xl text-center">
+            <h3 class="text-2xl font-black uppercase tracking-tighter mb-6 text-slate-900">Account Access</h3>
+            <input type="email" placeholder="EMAIL ADDRESS" class="w-full mb-3 p-4 bg-white/60 border border-slate-900/10 rounded-2xl outline-none text-xs font-bold">
+            <input type="password" placeholder="PASSWORD" class="w-full mb-6 p-4 bg-white/60 border border-slate-900/10 rounded-2xl outline-none text-xs font-bold">
+            <button onclick="triggerToast('Login Protocol Initiated'); closeModal();" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg">Sign In</button>
+            <button onclick="closeModal()" class="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest block mx-auto">Cancel</button>
+        </div>
+
+        <!-- Wishlist Modal -->
+        <div id="modal-wishlist" class="hidden bg-white rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 shadow-2xl max-h-[80vh] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                <h3 class="text-xl font-black uppercase tracking-tighter text-slate-900">Your Wishlist</h3>
+                <button onclick="closeModal()" class="text-slate-400 text-xl font-bold">✕</button>
+            </div>
+            <div id="wishlist-modal-items" class="space-y-4"></div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div id="modal-checkout" class="hidden bg-white rounded-[2.5rem] max-w-xl w-full p-6 sm:p-10 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <h3 class="text-2xl font-black uppercase tracking-tighter mb-6 text-slate-900">Express Checkout</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Delivery Address (India)</label>
+                    <input type="text" placeholder="FULL NAME" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    <input type="text" placeholder="COMPLETE STREET ADDRESS" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <input type="text" placeholder="CITY" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                        <input type="text" placeholder="PINCODE" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Payment Method</label>
+                    <div class="space-y-2">
+                        <div class="p-3.5 border-2 border-slate-900 rounded-xl flex justify-between items-center cursor-pointer bg-slate-50">
+                            <span class="text-xs font-black uppercase text-slate-900">UPI (Google Pay / PhonePe / Paytm)</span>
+                            <span class="text-sky-600 font-bold text-[9px] uppercase tracking-widest">Recommended</span>
+                        </div>
+                        <div class="p-3.5 border-2 border-slate-100 rounded-xl flex justify-between items-center cursor-pointer">
+                            <span class="text-xs font-black uppercase text-slate-900">Cash on Delivery (COD)</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="completeCheckoutOrder()" class="w-full bg-emerald-600 text-white font-black py-4.5 rounded-2xl uppercase text-xs tracking-widest shadow-xl mt-4 hover:bg-emerald-700 transition">
+                    Place Order & Pay
+                </button>
+            </div>
+            <button onclick="closeModal()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Back to Shopping Bag</button>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/20 border-t border-white/40 p-8 sm:p-16 mt-20">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-12">
+            <div class="md:col-span-2">
+                <h2 class="text-3xl font-black tracking-tighter mb-4 text-slate-900">HELUX</h2>
+                <p class="text-xs font-medium text-slate-500 leading-relaxed max-w-sm">Botanical seascape formulas designed for deep hydration and natural radiance. Formulated specifically for Indian skin & weather conditions.</p>
+            </div>
+            <div>
+                <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Collection</h4>
+                <ul class="space-y-2.5 text-[10px] font-bold uppercase text-slate-400">
+                    <li onclick="filterCategory('Cream'); navigateTo('home')" class="hover:text-slate-900 cursor-pointer">Face Creams</li>
+                    <li onclick="filterCategory('Serum'); navigateTo('home')" class="hover:text-slate-900 cursor-pointer">Glow Serums</li>
+                    <li onclick="filterCategory('Wash'); navigateTo('home')" class="hover:text-slate-900 cursor-pointer">Cleansers</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Help & Info</h4>
+                <ul class="space-y-2.5 text-[10px] font-bold uppercase text-slate-400">
+                    <li onclick="triggerToast('Express Shipping Active')" class="hover:text-slate-900 cursor-pointer">Shipping Policy</li>
+                    <li onclick="triggerToast('Razorpay 256-Bit Encrypted')" class="hover:text-slate-900 cursor-pointer">Secure Payments</li>
+                    <li onclick="triggerToast('Support: care@helux.in')" class="hover:text-slate-900 cursor-pointer">Contact Support</li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900/5 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.4em]">&copy; 2024 HELUX BEAUTY INDIA. ALL RIGHTS RESERVED.</p>
+        </div>
+    </footer>
+
+    <!-- CENTRALIZED APPLICATION ENGINE -->
+    <script>
+        /**
+         * 1. MASTER PRODUCT CATALOG (All local folders mapped correctly to a1.webp through a4.webp)
+         */
+        const CATALOG = [
+            { 
+                id: 101, 
+                name: "Mamaearth Vitamin C Daily Glow Cream", 
+                price: 499, 
+                originalPrice: 899,
+                category: "Cream",
+                rating: 4.8, 
+                reviewsCount: 1450, 
+                images: [
+                    "Mamaearth Vitamin C Daily Glow Cream/a1.webp", 
+                    "Mamaearth Vitamin C Daily Glow Cream/a2.webp", 
+                    "Mamaearth Vitamin C Daily Glow Cream/a3.webp", 
+                    "Mamaearth Vitamin C Daily Glow Cream/a4.webp"
+                ],
+                desc: "Official Mamaearth Pack of 2 (80g each). Infused with Vitamin C and Turmeric to illuminate skin and provide 24-hour non-greasy hydration. Dermatologically tested for Indian skin." 
+            },
+            { 
+                id: 102, 
+                name: "Saffron Anti-Pigmentation Blemish Cream", 
+                price: 379, 
+                originalPrice: 699,
+                category: "Cream",
+                rating: 4.7, 
+                reviewsCount: 890, 
+                images: [
+                    "Saffron Anti-Pigmentation Blemish Cream/a1.webp",
+                    "Saffron Anti-Pigmentation Blemish Cream/a2.webp",
+                    "Saffron Anti-Pigmentation Blemish Cream/a3.webp",
+                    "Saffron Anti-Pigmentation Blemish Cream/a4.webp"
+                ],
+                desc: "Enriched with rare saffron essence to target dark spots, acne blemishes, and hyperpigmentation for an even, radiant complexion." 
+            },
+            { 
+                id: 103, 
+                name: "Plix Guava Glow Mini Regime Pack", 
+                price: 349, 
+                originalPrice: 599,
+                category: "Serum",
+                rating: 4.9, 
+                reviewsCount: 520, 
+                images: [
+                    "Plix Guava Glow Mini Regime Pack/a1.webp",
+                    "Plix Guava Glow Mini Regime Pack/a2.webp",
+                    "Plix Guava Glow Mini Regime Pack/a3.webp",
+                    "Plix Guava Glow Mini Regime Pack/a4.webp"
+                ],
+                desc: "Double-action brightening duo containing 10% Vitamin C mini serum and juicy mini cleanser for rapid spot correction." 
+            },
+            { 
+                id: 104, 
+                name: "Plix 10% Vitamin C Guava Serum", 
+                price: 200, 
+                originalPrice: 399,
+                category: "Serum",
+                rating: 4.8, 
+                reviewsCount: 2100, 
+                images: [
+                    "Plix 10 percent Vitamin C Guava Serum/a1.webp",
+                    "Plix 10 percent Vitamin C Guava Serum/a2.webp",
+                    "Plix 10 percent Vitamin C Guava Serum/a3.webp",
+                    "Plix 10 percent Vitamin C Guava Serum/a4.webp"
+                ],
+                desc: "Lightweight, non-sticky serum packed with Hyaluronic Acid and Pentavitin to lock in deep moisture for 72 hours." 
+            },
+            { 
+                id: 105, 
+                name: "Ghar Soaps Magic De-Tan Face Wash", 
+                price: 399, 
+                originalPrice: 649,
+                category: "Wash",
+                rating: 4.6, 
+                reviewsCount: 310, 
+                images: [
+                    "Ghar Soaps Magic De-Tan Face Wash/a1.webp",
+                    "Ghar Soaps Magic De-Tan Face Wash/a2.webp",
+                    "Ghar Soaps Magic De-Tan Face Wash/a3.webp",
+                    "Ghar Soaps Magic De-Tan Face Wash/a4.webp"
+                ],
+                desc: "Sandalwood, Saffron, and Glutathione blend engineered for deep tan removal, pore cleansing, and instant brightening." 
+            },
+            { 
+                id: 106, 
+                name: "Ponds Bright Beauty Spot-Less Wash", 
+                price: 199, 
+                originalPrice: 299,
+                category: "Wash",
+                rating: 4.5, 
+                reviewsCount: 5600, 
+                images: [
+                    "Ponds Bright Beauty Spot-Less Wash/a1.webp",
+                    "Ponds Bright Beauty Spot-Less Wash/a2.webp",
+                    "Ponds Bright Beauty Spot-Less Wash/a3.webp",
+                    "Ponds Bright Beauty Spot-Less Wash/a4.webp"
+                ],
+                desc: "Clinically proven spot-less formula enriched with Vitamin B3+ to wash away dead skin cells and reveal natural luminosity." 
+            }
+        ];
+
+        /**
+         * 2. CENTRALIZED APPLICATION STATE ENGINE
+         */
+        const STATE = {
+            cart: {},            
+            wishlist: new Set(), 
+            currentView: 'home', 
+            selectedId: null,
+            categoryFilter: 'All',
+            searchQuery: ''
+        };
+
+        function syncUI() {
+            renderGrid();
+            renderCartDrawer();
+            updateHeaderCounters();
+            if (STATE.currentView === 'detail' && STATE.selectedId) {
+                renderDetailPage(STATE.selectedId);
+            }
+        }
+
+        /**
+         * 3. RENDER MAIN PRODUCT GRID
+         */
+        function renderGrid() {
+            const container = document.getElementById('product-grid');
+            const items = CATALOG.filter(item => {
+                const matchesCat = STATE.categoryFilter === 'All' || item.category === STATE.categoryFilter;
+                const matchesSearch = item.name.toLowerCase().includes(STATE.searchQuery.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-16 text-center text-xs font-bold uppercase tracking-widest text-slate-400">No Formulas Match Your Criteria</div>`;
+                return;
+            }
+
+            container.innerHTML = items.map(p => {
+                const qty = STATE.cart[p.id] || 0;
+                const isWishlisted = STATE.wishlist.has(p.id);
+
+                return `
+                <div class="glass-card p-3 sm:p-4 rounded-[2rem] flex flex-col justify-between cursor-pointer group" onclick="navigateToDetail(${p.id})">
+                    <!-- Image Gallery Viewport -->
+                    <div class="relative overflow-hidden rounded-2xl mb-3 bg-white/30 h-40 sm:h-56">
+                        <div class="gallery-viewport h-full" onscroll="handleGalleryScroll(this, ${p.id})">
+                            ${p.images.map(img => `<div class="gallery-slide h-full w-full"><img src="${img}" alt="${p.name}" class="w-full h-full object-cover"></div>`).join('')}
+                        </div>
+                        
+                        <!-- Wishlist Heart Button -->
+                        <button onclick="event.stopPropagation(); toggleWishlist(${p.id})" class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-xs shadow-md transition ${isWishlisted ? 'text-red-500 font-bold' : 'text-slate-400'}">
+                            ❤
+                        </button>
+
+                        <!-- Dot Indicators (....) -->
+                        ${p.images.length > 1 ? `
+                        <div id="dots-${p.id}" class="dots-row absolute bottom-2.5 left-1/2 -translate-x-1/2 pointer-events-none">
+                            ${p.images.map((_, i) => `<div class="dot-indicator ${i === 0 ? 'active' : ''}"></div>`).join('')}
+                        </div>` : ''}
+                    </div>
+
+                    <!-- Details -->
+                    <div class="mb-3">
+                        <div class="flex items-center gap-1 text-[9px] font-bold text-sky-600 uppercase tracking-widest mb-1">
+                            <span>★ ${p.rating}</span>
+                            <span class="text-slate-400 font-medium">(${p.reviewsCount})</span>
+                        </div>
+                        <h3 class="text-[10px] sm:text-xs font-black uppercase tracking-tight text-slate-900 leading-tight line-clamp-2 mb-1">${p.name}</h3>
+                        <p class="text-sm sm:text-base font-black text-slate-900">₹${p.price} <span class="text-[10px] text-slate-400 font-normal line-through ml-1">₹${p.originalPrice}</span></p>
+                    </div>
+
+                    <!-- Dynamic Action Button / Quantity Controls -->
+                    <div onclick="event.stopPropagation()">
+                        ${qty > 0 ? renderQtyControllerUI(p.id, qty) : `
+                        <button onclick="updateCartQty(${p.id}, 1)" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl uppercase text-[9px] sm:text-[10px] tracking-widest hover:bg-sky-600 transition-all shadow-md active:scale-95">
+                            Add to Bag
+                        </button>`}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /**
+         * 4. RENDER QUANTITY CONTROLLER UI (- / +)
+         */
+        function renderQtyControllerUI(productId, qty) {
+            return `
+            <div class="flex items-center justify-between bg-slate-100 rounded-xl p-1 shadow-inner border border-slate-200">
+                <button onclick="updateCartQty(${productId}, -1)" class="bg-white text-slate-900 w-7 h-7 rounded-lg font-black text-xs shadow-sm hover:bg-slate-50 transition active:scale-90">-</button>
+                <span class="font-black text-[10px] text-slate-900 uppercase tracking-wider">In Bag: ${qty}</span>
+                <button onclick="updateCartQty(${productId}, 1)" class="bg-white text-slate-900 w-7 h-7 rounded-lg font-black text-xs shadow-sm hover:bg-slate-50 transition active:scale-90">+</button>
+            </div>`;
+        }
+
+        /**
+         * 5. MUTATION LOGIC
+         */
+        function updateCartQty(productId, delta) {
+            const current = STATE.cart[productId] || 0;
+            const updated = current + delta;
+            
+            if (updated <= 0) {
+                delete STATE.cart[productId];
+                triggerToast("Removed from Bag");
+            } else {
+                STATE.cart[productId] = updated;
+                if (current === 0) triggerToast("Added to Shopping Bag");
+            }
+            
+            syncUI();
+        }
+
+        function toggleWishlist(productId) {
+            if (STATE.wishlist.has(productId)) {
+                STATE.wishlist.delete(productId);
+                triggerToast("Removed from Wishlist");
+            } else {
+                STATE.wishlist.add(productId);
+                triggerToast("Added to Wishlist");
+            }
+            syncUI();
+        }
+
+        function updateHeaderCounters() {
+            const totalQty = Object.values(STATE.cart).reduce((sum, q) => sum + q, 0);
+            const totalItemsInWishlist = STATE.wishlist.size;
+
+            document.getElementById('nav-bag-count').innerText = totalQty;
+            document.getElementById('nav-wishlist-count').innerText = totalItemsInWishlist;
+            document.getElementById('mobile-wishlist-count').innerText = totalItemsInWishlist;
+
+            let subtotal = 0;
+            Object.entries(STATE.cart).forEach(([id, qty]) => {
+                const item = CATALOG.find(p => p.id === parseInt(id));
+                if (item) subtotal += (item.price * qty);
+            });
+
+            document.getElementById('cart-total-amount').innerText = subtotal.toLocaleString();
+            document.getElementById('drawer-item-subtitle').innerText = `${totalQty} Formula(s) Selected`;
+
+            const threshold = 999;
+            const progress = Math.min((subtotal / threshold) * 100, 100);
+            document.getElementById('shipping-threshold-bar').style.width = progress + '%';
+            document.getElementById('shipping-threshold-percent').innerText = Math.round(progress) + '%';
+            document.getElementById('shipping-threshold-text').innerText = subtotal >= threshold ? "Free Express Shipping Unlocked" : `Add ₹${threshold - subtotal} for Free Delivery`;
+        }
+
+        /**
+         * 6. RENDER CART SIDEBAR DRAWER
+         */
+        function renderCartDrawer() {
+            const container = document.getElementById('cart-drawer-items');
+            const entries = Object.entries(STATE.cart);
+
+            if (entries.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 font-bold uppercase text-xs tracking-widest text-slate-300 italic">Your Bag is Empty</div>`;
+                return;
+            }
+
+            container.innerHTML = entries.map(([id, qty]) => {
+                const p = CATALOG.find(prod => prod.id === parseInt(id));
+                return `
+                <div class="flex gap-4 items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <img src="${p.images[0]}" alt="${p.name}" class="w-16 h-16 object-cover rounded-xl shadow-sm">
+                    <div class="flex-grow">
+                        <h4 class="font-black text-[10px] uppercase tracking-tight text-slate-900 line-clamp-1">${p.name}</h4>
+                        <p class="font-black text-sky-600 text-xs mt-0.5">₹${p.price}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateCartQty(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 font-black text-xs flex items-center justify-center shadow-sm">-</button>
+                        <span class="font-black text-xs px-1">${qty}</span>
+                        <button onclick="updateCartQty(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 font-black text-xs flex items-center justify-center shadow-sm">+</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /**
+         * 7. FULL-SCREEN IMMERSIVE DETAIL VIEW
+         */
+        function navigateToDetail(productId) {
+            STATE.selectedId = productId;
+            STATE.currentView = 'detail';
+            document.getElementById('view-home').classList.add('hidden-view');
+            document.getElementById('view-detail').classList.remove('hidden-view');
+            renderDetailPage(productId);
+            window.scrollTo(0, 0);
+        }
+
+        function navigateTo(view) {
+            STATE.currentView = view;
+            document.getElementById('view-home').classList.add('hidden-view');
+            document.getElementById('view-detail').classList.add('hidden-view');
+            if (view === 'home') document.getElementById('view-home').classList.remove('hidden-view');
+            window.scrollTo(0, 0);
+        }
+
+        function renderDetailPage(productId) {
+            const p = CATALOG.find(prod => prod.id === productId);
+            const qty = STATE.cart[p.id] || 0;
+            const related = CATALOG.filter(item => item.id !== p.id).slice(0, 4);
+            const isWishlisted = STATE.wishlist.has(p.id);
+
+            document.getElementById('detail-page-content').innerHTML = `
+                <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+                    <!-- Gallery Viewport -->
+                    <div class="relative">
+                        <div class="gallery-viewport overflow-hidden rounded-[2.5rem] h-80 sm:h-[450px] lg:h-[550px] shadow-2xl" onscroll="handleGalleryScroll(this, 'detail')">
+                            ${p.images.map(img => `<div class="gallery-slide h-full w-full"><img src="${img}" alt="${p.name}" class="w-full h-full object-cover"></div>`).join('')}
+                        </div>
+                        ${p.images.length > 1 ? `
+                        <div id="dots-detail" class="dots-row absolute bottom-5 left-1/2 -translate-x-1/2">
+                            ${p.images.map((_, i) => `<div class="dot-indicator ${i === 0 ? 'active' : ''}"></div>`).join('')}
+                        </div>` : ''}
+                    </div>
+
+                    <!-- Details Column -->
+                    <div class="py-2 sm:py-6">
+                        <span class="text-[10px] font-black text-sky-600 uppercase tracking-[0.4em] mb-2 inline-block">Dermatology Lab Formula</span>
+                        <h2 class="text-3xl sm:text-5xl font-black text-slate-900 uppercase leading-none mb-4">${p.name}</h2>
+                        
+                        <div class="flex items-center gap-2 mb-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            <span class="text-slate-900 font-extrabold">★ ${p.rating} / 5.0</span> • ${p.reviewsCount} Verified Buyer Reviews
+                        </div>
+
+                        <p class="text-4xl font-black text-slate-900 mb-6">₹${p.price} <span class="text-sm text-slate-400 font-normal line-through ml-2">₹${p.originalPrice}</span></p>
+                        
+                        <div class="bg-white/40 border border-white/60 rounded-3xl p-6 mb-8 backdrop-blur-md">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Description</h4>
+                            <p class="text-slate-600 leading-relaxed text-sm">${p.desc}</p>
+                        </div>
+
+                        <!-- CTA Actions -->
+                        <div class="flex gap-3 max-w-md">
+                            <div class="flex-grow">
+                                ${qty > 0 ? renderQtyControllerUI(p.id, qty) : `
+                                <button onclick="updateCartQty(${p.id}, 1)" class="w-full bg-slate-900 text-white font-black py-4.5 rounded-2xl uppercase text-xs tracking-widest shadow-2xl hover:bg-sky-600 transition">
+                                    Add to Shopping Bag
+                                </button>`}
+                            </div>
+                            <button onclick="toggleWishlist(${p.id})" class="w-14 h-14 rounded-2xl border border-slate-900/15 flex items-center justify-center text-lg bg-white/40 shadow-sm ${isWishlisted ? 'text-red-500' : 'text-slate-400'}">
+                                ❤
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verified Reviews & Related Formulas -->
+                <div class="mt-24 pt-12 border-t border-slate-900/10">
+                    <h4 class="text-xs font-black uppercase tracking-[0.3em] mb-8 text-slate-400">Complete Your Regime</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        ${related.map(r => `
+                            <div class="glass-card p-3 sm:p-4 rounded-2xl cursor-pointer" onclick="navigateToDetail(${r.id})">
+                                <img src="${r.images[0]}" alt="${r.name}" class="w-full h-32 object-cover rounded-xl mb-3">
+                                <h5 class="text-[10px] font-black uppercase line-clamp-1">${r.name}</h5>
+                                <p class="text-xs font-black text-sky-600 mt-0.5">₹${r.price}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+        }
+
+        /**
+         * 8. GALLERY DOT SCROLL LISTENER
+         */
+        function handleGalleryScroll(container, id) {
+            const index = Math.round(container.scrollLeft / container.offsetWidth);
+            const selector = id === 'detail' ? '#dots-detail .dot-indicator' : `#dots-${id} .dot-indicator`;
+            const dots = document.querySelectorAll(selector);
+            dots.forEach((dot, i) => {
+                if (i === index) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        }
+
+        /**
+         * 9. UI UTILITIES & MODAL CONTROLLERS
+         */
+        function toggleCartDrawer() {
+            document.getElementById('cart-drawer').classList.toggle('translate-x-full');
+        }
+
+        function triggerToast(message) {
+            const toast = document.getElementById('toast-notice');
+            toast.innerText = message;
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 2500);
+        }
+
+        function openModal(modalName) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-auth').classList.add('hidden');
+            document.getElementById('modal-wishlist').classList.add('hidden');
+            document.getElementById('modal-checkout').classList.add('hidden');
+
+            if (modalName === 'wishlist') {
+                renderWishlistModalItems();
+            }
+
+            document.getElementById(`modal-${modalName}`).classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        function renderWishlistModalItems() {
+            const container = document.getElementById('wishlist-modal-items');
+            if (STATE.wishlist.size === 0) {
+                container.innerHTML = `<p class="text-center text-xs font-bold uppercase tracking-widest text-slate-400 py-8">Your Wishlist is Empty</p>`;
+                return;
+            }
+
+            container.innerHTML = Array.from(STATE.wishlist).map(id => {
+                const item = CATALOG.find(p => p.id === id);
+                return `
+                <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.images[0]}" class="w-12 h-12 object-cover rounded-xl">
+                        <div>
+                            <h5 class="text-[10px] font-black uppercase text-slate-900">${item.name}</h5>
+                            <p class="text-xs font-black text-sky-600">₹${item.price}</p>
+                        </div>
+                    </div>
+                    <button onclick="updateCartQty(${item.id}, 1); closeModal();" class="text-[10px] font-black bg-slate-900 text-white px-4 py-2 rounded-xl uppercase tracking-widest">
+                        Buy Now
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        function openCheckoutModal() {
+            const totalQty = Object.values(STATE.cart).reduce((sum, q) => sum + q, 0);
+            if (totalQty === 0) {
+                triggerToast("Your Bag is Empty");
+                return;
+            }
+            toggleCartDrawer();
+            openModal('checkout');
+        }
+
+        function completeCheckoutOrder() {
+            STATE.cart = {};
+            closeModal();
+            syncUI();
+            triggerToast("Order Confirmed! Redirecting to UPI...");
+        }
+
+        function filterCategory(cat) {
+            STATE.categoryFilter = cat;
+            const filterBtns = document.querySelectorAll('.category-filter-btn');
+            filterBtns.forEach(btn => {
+                if (btn.innerText.toUpperCase() === cat.toUpperCase() || (cat === 'All' && btn.innerText === 'All')) {
+                    btn.classList.add('bg-slate-900', 'text-white');
+                } else {
+                    btn.classList.remove('bg-slate-900', 'text-white');
+                }
+            });
+            syncUI();
+        }
+
+        function handleSearch(query) {
+            STATE.searchQuery = query;
+            syncUI();
+        }
+
+        // INITIALIZE APP
+        syncUI();
+    </script>
+</body>
+</html>
