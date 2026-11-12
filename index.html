@@ -6,6 +6,8 @@
     <title>HELUX | Luxury Seascape Skincare India</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -211,7 +213,7 @@
             <h1 class="text-2xl font-black tracking-tighter text-slate-900 cursor-pointer select-none" onclick="navigateTo('home')">HELUX</h1>
             <nav class="hidden md:flex gap-3">
                 <button onclick="navigateTo('home')" class="nav-btn">Home</button>
-                <button onclick="openModal('auth')" class="nav-btn">Account</button>
+                <button onclick="openModal('auth')" id="desktop-account-btn" class="nav-btn">Account</button>
                 <button onclick="openModal('wishlist')" class="nav-btn">Wishlist (<span id="nav-wishlist-count">0</span>)</button>
             </nav>
         </div>
@@ -229,7 +231,7 @@
     <!-- Mobile Sub-Header Nav -->
     <div class="md:hidden flex justify-center gap-2.5 py-2.5 px-4 bg-white/30 backdrop-blur-md border-b border-white/30">
         <button onclick="navigateTo('home')" class="nav-btn py-1.5 px-4">Home</button>
-        <button onclick="openModal('auth')" class="nav-btn py-1.5 px-4">Account</button>
+        <button onclick="openModal('auth')" id="mobile-account-btn" class="nav-btn py-1.5 px-4">Account</button>
         <button onclick="openModal('wishlist')" class="nav-btn py-1.5 px-4">Wishlist (<span id="mobile-wishlist-count">0</span>)</button>
     </div>
 
@@ -308,13 +310,31 @@
     <!-- MODAL OVERLAYS -->
     <div id="modal-backdrop" class="fixed inset-0 z-[150] hidden bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
         
-        <!-- Auth Modal -->
-        <div id="modal-auth" class="hidden glass-card rounded-[2.5rem] max-w-sm w-full p-8 sm:p-10 shadow-2xl text-center">
-            <h3 class="text-2xl font-black uppercase tracking-tighter mb-6 text-slate-900">Account Access</h3>
-            <input type="email" placeholder="EMAIL ADDRESS" class="w-full mb-3 p-4 bg-white/60 border border-slate-900/10 rounded-2xl outline-none text-xs font-bold">
-            <input type="password" placeholder="PASSWORD" class="w-full mb-6 p-4 bg-white/60 border border-slate-900/10 rounded-2xl outline-none text-xs font-bold">
-            <button onclick="triggerToast('Login Protocol Initiated'); closeModal();" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg">Sign In</button>
-            <button onclick="closeModal()" class="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest block mx-auto">Cancel</button>
+        <!-- Auth Modal (Supabase Sign In + Create Account) -->
+        <div id="modal-auth" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 sm:p-10 shadow-2xl text-center">
+            <!-- Logged Out View -->
+            <div id="auth-logged-out-view">
+                <h3 class="text-2xl font-black uppercase tracking-tighter mb-2 text-slate-900">Account Access</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Sign in or create a new HELUX account</p>
+                
+                <input type="email" id="auth-email" placeholder="EMAIL ADDRESS" class="w-full mb-3 p-4 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
+                <input type="password" id="auth-password" placeholder="PASSWORD (MIN 6 CHARS)" class="w-full mb-5 p-4 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
+                
+                <div class="space-y-2.5">
+                    <button onclick="handleSupabaseLogin()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg hover:bg-sky-600 transition">Sign In</button>
+                    <button onclick="handleSupabaseSignup()" class="w-full bg-sky-50 text-sky-700 border border-sky-200 font-black py-3.5 rounded-2xl uppercase text-xs tracking-widest hover:bg-sky-100 transition">Create New Account</button>
+                </div>
+            </div>
+
+            <!-- Logged In View -->
+            <div id="auth-logged-in-view" class="hidden">
+                <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block mb-1">Active Session</span>
+                <h3 class="text-xl font-black tracking-tight text-slate-900 mb-2 break-all" id="logged-in-email">user@email.com</h3>
+                <p class="text-xs text-slate-500 mb-6">Your orders are linked to this account.</p>
+                <button onclick="handleSupabaseLogout()" class="w-full bg-red-500 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg hover:bg-red-600 transition">Sign Out</button>
+            </div>
+
+            <button onclick="closeModal()" class="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest block mx-auto">Close</button>
         </div>
 
         <!-- Wishlist Modal -->
@@ -332,30 +352,47 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Delivery Address (India)</label>
-                    <input type="text" placeholder="FULL NAME" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
-                    <input type="text" placeholder="COMPLETE STREET ADDRESS" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    <input type="text" id="checkout-name" placeholder="FULL NAME" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    <input type="tel" id="checkout-phone" placeholder="MOBILE NUMBER (10 DIGITS)" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                    <input type="text" id="checkout-street" placeholder="COMPLETE STREET ADDRESS" class="w-full mb-2.5 p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
                     <div class="grid grid-cols-2 gap-2.5">
-                        <input type="text" placeholder="CITY" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
-                        <input type="text" placeholder="PINCODE" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                        <input type="text" id="checkout-city" placeholder="CITY" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
+                        <input type="text" id="checkout-pincode" placeholder="PINCODE" class="p-3.5 bg-slate-100 rounded-xl border-none outline-none text-xs font-bold">
                     </div>
                 </div>
                 <div class="pt-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Payment Method</label>
                     <div class="space-y-2">
                         <div class="p-3.5 border-2 border-slate-900 rounded-xl flex justify-between items-center cursor-pointer bg-slate-50">
-                            <span class="text-xs font-black uppercase text-slate-900">UPI (Google Pay / PhonePe / Paytm)</span>
+                            <span class="text-xs font-black uppercase text-slate-900">UPI (Scan QR Code)</span>
                             <span class="text-sky-600 font-bold text-[9px] uppercase tracking-widest">Recommended</span>
-                        </div>
-                        <div class="p-3.5 border-2 border-slate-100 rounded-xl flex justify-between items-center cursor-pointer">
-                            <span class="text-xs font-black uppercase text-slate-900">Cash on Delivery (COD)</span>
                         </div>
                     </div>
                 </div>
-                <button onclick="completeCheckoutOrder()" class="w-full bg-emerald-600 text-white font-black py-4.5 rounded-2xl uppercase text-xs tracking-widest shadow-xl mt-4 hover:bg-emerald-700 transition">
+                <button onclick="proceedToQrPayment()" class="w-full bg-emerald-600 text-white font-black py-4.5 rounded-2xl uppercase text-xs tracking-widest shadow-xl mt-4 hover:bg-emerald-700 transition">
                     Place Order & Pay
                 </button>
             </div>
             <button onclick="closeModal()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Back to Shopping Bag</button>
+        </div>
+
+        <!-- Static QR Payment Modal -->
+        <div id="modal-qr" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 shadow-2xl text-center">
+            <span class="text-[10px] font-black text-sky-600 uppercase tracking-[0.3em] mb-1 block">UPI Payment</span>
+            <h3 class="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-1">Scan to Pay</h3>
+            <p class="text-sm font-black text-slate-500 mb-5">Amount Payable: <span class="text-slate-900">₹<span id="qr-payable-amount">0</span></span></p>
+            
+            <!-- Your QR Code Image (Save your QR image as qr.png in the same folder as index.html) -->
+            <div class="bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 inline-block mb-5">
+                <img src="qr.png" alt="Scan UPI QR Code" class="w-52 h-52 object-contain mx-auto rounded-xl">
+            </div>
+
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Scan with GPay, PhonePe, Paytm, or any UPI app</p>
+
+            <button onclick="confirmQrPayment()" id="confirm-payment-btn" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-700 transition active:scale-95">
+                I Have Paid
+            </button>
+            <button onclick="openModal('checkout')" class="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest block mx-auto">Back to Checkout</button>
         </div>
 
     </div>
@@ -379,7 +416,7 @@
                 <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Help & Info</h4>
                 <ul class="space-y-2.5 text-[10px] font-bold uppercase text-slate-400">
                     <li onclick="triggerToast('Express Shipping Active')" class="hover:text-slate-900 cursor-pointer">Shipping Policy</li>
-                    <li onclick="triggerToast('Razorpay 256-Bit Encrypted')" class="hover:text-slate-900 cursor-pointer">Secure Payments</li>
+                    <li onclick="triggerToast('UPI Direct Scan Enabled')" class="hover:text-slate-900 cursor-pointer">Secure Payments</li>
                     <li onclick="triggerToast('Support: care@helux.in')" class="hover:text-slate-900 cursor-pointer">Contact Support</li>
                 </ul>
             </div>
@@ -392,7 +429,14 @@
     <!-- CENTRALIZED APPLICATION ENGINE -->
     <script>
         /**
-         * 1. MASTER PRODUCT CATALOG (All local folders mapped correctly to a1.webp through a4.webp)
+         * 0. SUPABASE INITIALIZATION
+         */
+        const SUPABASE_URL = 'https://defmcgvvhurbqjrherux.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_a-89zCu2e-P_LoNiMFF--Q_pvszCphD';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        /**
+         * 1. MASTER PRODUCT CATALOG
          */
         const CATALOG = [
             { 
@@ -502,8 +546,100 @@
             currentView: 'home', 
             selectedId: null,
             categoryFilter: 'All',
-            searchQuery: ''
+            searchQuery: '',
+            user: null
         };
+
+        /**
+         * AUTHENTICATION HANDLERS (SUPABASE)
+         */
+        async function checkUserSession() {
+            const { data } = await db.auth.getUser();
+            STATE.user = data?.user || null;
+            updateAuthUI();
+        }
+
+        function updateAuthUI() {
+            const deskBtn = document.getElementById('desktop-account-btn');
+            const mobBtn = document.getElementById('mobile-account-btn');
+            const loggedOutView = document.getElementById('auth-logged-out-view');
+            const loggedInView = document.getElementById('auth-logged-in-view');
+
+            if (STATE.user) {
+                const shortName = STATE.user.email.split('@')[0];
+                deskBtn.innerText = shortName;
+                mobBtn.innerText = shortName;
+                document.getElementById('logged-in-email').innerText = STATE.user.email;
+                loggedOutView.classList.add('hidden');
+                loggedInView.classList.remove('hidden');
+            } else {
+                deskBtn.innerText = 'Account';
+                mobBtn.innerText = 'Account';
+                loggedOutView.classList.remove('hidden');
+                loggedInView.classList.add('hidden');
+            }
+        }
+
+        async function handleSupabaseSignup() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || password.length < 6) {
+                triggerToast("Enter valid email & 6+ char password");
+                return;
+            }
+
+            triggerToast("Creating Account...");
+            const { data, error } = await db.auth.signUp({ email, password });
+
+            if (error) {
+                triggerToast(error.message);
+            } else {
+                STATE.user = data.user;
+                updateAuthUI();
+                closeModal();
+                triggerToast("Account Created & Signed In!");
+            }
+        }
+
+        async function handleSupabaseLogin() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            if (!email || !password) {
+                triggerToast("Enter email and password");
+                return;
+            }
+
+            triggerToast("Signing In...");
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                triggerToast(error.message);
+            } else {
+                STATE.user = data.user;
+                updateAuthUI();
+                closeModal();
+                triggerToast("Welcome back to HELUX!");
+            }
+        }
+
+        async function handleSupabaseLogout() {
+            await db.auth.signOut();
+            STATE.user = null;
+            updateAuthUI();
+            closeModal();
+            triggerToast("Signed Out");
+        }
+
+        function getCartSubtotal() {
+            let subtotal = 0;
+            Object.entries(STATE.cart).forEach(([id, qty]) => {
+                const item = CATALOG.find(p => p.id === parseInt(id));
+                if (item) subtotal += (item.price * qty);
+            });
+            return subtotal;
+        }
 
         function syncUI() {
             renderGrid();
@@ -624,11 +760,7 @@
             document.getElementById('nav-wishlist-count').innerText = totalItemsInWishlist;
             document.getElementById('mobile-wishlist-count').innerText = totalItemsInWishlist;
 
-            let subtotal = 0;
-            Object.entries(STATE.cart).forEach(([id, qty]) => {
-                const item = CATALOG.find(p => p.id === parseInt(id));
-                if (item) subtotal += (item.price * qty);
-            });
+            const subtotal = getCartSubtotal();
 
             document.getElementById('cart-total-amount').innerText = subtotal.toLocaleString();
             document.getElementById('drawer-item-subtitle').innerText = `${totalQty} Formula(s) Selected`;
@@ -787,9 +919,14 @@
             document.getElementById('modal-auth').classList.add('hidden');
             document.getElementById('modal-wishlist').classList.add('hidden');
             document.getElementById('modal-checkout').classList.add('hidden');
+            document.getElementById('modal-qr').classList.add('hidden');
 
             if (modalName === 'wishlist') {
                 renderWishlistModalItems();
+            }
+
+            if (modalName === 'qr') {
+                document.getElementById('qr-payable-amount').innerText = getCartSubtotal().toLocaleString();
             }
 
             document.getElementById(`modal-${modalName}`).classList.remove('hidden');
@@ -834,11 +971,59 @@
             openModal('checkout');
         }
 
-        function completeCheckoutOrder() {
+        function proceedToQrPayment() {
+            const name = document.getElementById('checkout-name').value.trim();
+            const phone = document.getElementById('checkout-phone').value.trim();
+            const street = document.getElementById('checkout-street').value.trim();
+            const city = document.getElementById('checkout-city').value.trim();
+            const pincode = document.getElementById('checkout-pincode').value.trim();
+
+            if (!name || !phone || !street || !city || !pincode) {
+                triggerToast("Please fill all delivery details");
+                return;
+            }
+            openModal('qr');
+        }
+
+        async function confirmQrPayment() {
+            const btn = document.getElementById('confirm-payment-btn');
+            btn.innerText = "Saving Order...";
+            btn.disabled = true;
+
+            const name = document.getElementById('checkout-name').value.trim();
+            const phone = document.getElementById('checkout-phone').value.trim();
+            const fullAddress = `${document.getElementById('checkout-street').value.trim()}, ${document.getElementById('checkout-city').value.trim()} - ${document.getElementById('checkout-pincode').value.trim()}`;
+            
+            const itemsSummary = Object.entries(STATE.cart).map(([id, qty]) => {
+                const p = CATALOG.find(prod => prod.id === parseInt(id));
+                return `${p.name} (x${qty})`;
+            }).join(', ');
+
+            const totalAmount = getCartSubtotal();
+
+            // Insert order into Supabase 'orders' table
+            const { error } = await db.from('orders').insert([{
+                customer_name: name,
+                phone: phone,
+                user_email: STATE.user ? STATE.user.email : 'Guest',
+                address: fullAddress,
+                items: itemsSummary,
+                total_amount: totalAmount
+            }]);
+
+            btn.innerText = "I Have Paid";
+            btn.disabled = false;
+
+            if (error) {
+                console.error(error);
+                triggerToast("Order saved locally (Check Supabase orders table)");
+            } else {
+                triggerToast("Order Confirmed & Saved! Thank you.");
+            }
+
             STATE.cart = {};
             closeModal();
             syncUI();
-            triggerToast("Order Confirmed! Redirecting to UPI...");
         }
 
         function filterCategory(cat) {
@@ -860,6 +1045,7 @@
         }
 
         // INITIALIZE APP
+        checkUserSession();
         syncUI();
     </script>
 </body>
