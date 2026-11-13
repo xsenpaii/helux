@@ -375,7 +375,7 @@
                     <label class="text-[10px] font-black uppercase text-slate-400 mb-2 block">Payment Method</label>
                     <div class="space-y-2">
                         <div class="p-3.5 border-2 border-slate-900 rounded-xl flex justify-between items-center cursor-pointer bg-slate-50">
-                            <span class="text-xs font-black uppercase text-slate-900">UPI (Scan QR Code)</span>
+                            <span class="text-xs font-black uppercase text-slate-900">UPI (Exact Amount QR / App)</span>
                             <span class="text-sky-600 font-bold text-[9px] uppercase tracking-widest">Recommended</span>
                         </div>
                     </div>
@@ -387,21 +387,26 @@
             <button onclick="closeModal()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Back to Shopping Bag</button>
         </div>
 
-        <!-- Static QR Payment Modal with 1-Minute Countdown Timer -->
-        <div id="modal-qr" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 shadow-2xl text-center">
+        <!-- Dynamic Exact-Amount UPI QR Payment Modal with 1-Minute Countdown Timer -->
+        <div id="modal-qr" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-7 sm:p-8 shadow-2xl text-center">
             <div class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest mb-3">
                 <span>⏱ Complete Payment in</span>
                 <span id="qr-countdown-timer" class="text-amber-900 font-extrabold">01:00</span>
             </div>
             <h3 class="text-2xl font-black uppercase tracking-tighter text-slate-900 mb-1">Scan to Pay</h3>
-            <p class="text-sm font-black text-slate-500 mb-5">Amount Payable: <span class="text-slate-900">₹<span id="qr-payable-amount">0</span></span></p>
+            <p class="text-sm font-black text-slate-500 mb-4">Locked Amount: <span class="text-slate-900">₹<span id="qr-payable-amount">0</span></span></p>
             
-            <!-- Your QR Code Image (Save your QR image as qr.png in the same folder as index.html) -->
-            <div class="bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 inline-block mb-5">
-                <img src="qr.png" alt="Scan UPI QR Code" class="w-52 h-52 object-contain mx-auto rounded-xl">
+            <!-- Dynamic Exact-Amount UPI QR Code -->
+            <div class="bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 inline-block mb-3">
+                <img id="dynamic-upi-qr-img" src="" alt="Scan UPI QR Code" class="w-48 h-48 object-contain mx-auto rounded-xl bg-white p-1">
             </div>
 
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Scan with GPay, PhonePe, Paytm, or any UPI app</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">UPI ID: <span class="text-slate-700">9286911293@fam</span></p>
+
+            <!-- Direct Mobile UPI App Intent Button -->
+            <a id="mobile-upi-pay-link" href="#" class="block w-full bg-sky-600 text-white font-black py-3.5 rounded-2xl uppercase text-[11px] tracking-widest shadow-md hover:bg-sky-700 transition mb-2.5">
+                Tap to Pay on UPI App (Mobile)
+            </a>
 
             <button onclick="confirmQrPayment()" id="confirm-payment-btn" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-700 transition active:scale-95">
                 I Have Paid
@@ -443,11 +448,14 @@
     <!-- CENTRALIZED APPLICATION ENGINE -->
     <script>
         /**
-         * 0. SUPABASE INITIALIZATION
+         * 0. SUPABASE & MERCHANT UPI CONFIGURATION
          */
         const SUPABASE_URL = 'https://defmcgvvhurbqjrherux.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_a-89zCu2e-P_LoNiMFF--Q_pvszCphD';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const MERCHANT_UPI_ID = '9286911293@fam';
+        const MERCHANT_NAME = 'HELUX';
 
         let qrTimerInterval = null;
 
@@ -958,7 +966,7 @@
         }
 
         /**
-         * 9. UI UTILITIES, TIMER & MODAL CONTROLLERS
+         * 9. UI UTILITIES, TIMER, DYNAMIC UPI QR & MODAL CONTROLLERS
          */
         function toggleCartDrawer() {
             document.getElementById('cart-drawer').classList.toggle('translate-x-full');
@@ -969,6 +977,16 @@
             toast.innerText = message;
             toast.classList.add('active');
             setTimeout(() => toast.classList.remove('active'), 2500);
+        }
+
+        function generateExactUpiPayment(amount) {
+            const exactAmt = Number(amount).toFixed(2);
+            const upiLink = `upi://pay?pa=${encodeURIComponent(MERCHANT_UPI_ID)}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${exactAmt}&cu=INR`;
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data=${encodeURIComponent(upiLink)}`;
+
+            document.getElementById('qr-payable-amount').innerText = Number(amount).toLocaleString();
+            document.getElementById('dynamic-upi-qr-img').src = qrApiUrl;
+            document.getElementById('mobile-upi-pay-link').href = upiLink;
         }
 
         function startQrTimer() {
@@ -1018,7 +1036,7 @@
             }
 
             if (modalName === 'qr') {
-                document.getElementById('qr-payable-amount').innerText = getCartSubtotal().toLocaleString();
+                generateExactUpiPayment(getCartSubtotal());
                 startQrTimer();
             }
 
