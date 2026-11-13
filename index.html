@@ -200,10 +200,10 @@
         </svg>
     </div>
 
-    <!-- Top Announcement Marquee -->
+    <!-- Top Announcement Marquee (100% True Statements Only) -->
     <div class="marquee-bar sticky top-0 z-50 shadow-md">
         <div class="marquee-track uppercase">
-            HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999 • 100% VEGAN & DERMATOLOGICALLY TESTED • BUY 1 GET 1 ON VITAMIN C RANGE • HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999
+            HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999 • 100% AUTHENTIC BRANDS • DERMATOLOGICALLY TESTED FORMULAS • DIRECT DOORSTEP DELIVERY ACROSS INDIA • HELUX SEASCAPE COLLECTION • FREE EXPRESS DELIVERY IN INDIA ON ORDERS ABOVE ₹999 • 100% AUTHENTIC BRANDS • DERMATOLOGICALLY TESTED FORMULAS
         </div>
     </div>
 
@@ -292,8 +292,20 @@
         <!-- Cart Item List -->
         <div id="cart-drawer-items" class="flex-grow overflow-y-auto p-6 sm:p-8 space-y-4 no-scrollbar"></div>
 
-        <!-- Cart Footer -->
+        <!-- Cart Footer with Coupons Button -->
         <div class="p-6 sm:p-8 border-t border-slate-100 bg-slate-50">
+            <!-- Coupons Menu Trigger inside Cart -->
+            <button type="button" onclick="openCouponsFromCart()" class="w-full mb-5 p-3.5 bg-white border border-dashed border-sky-300 rounded-2xl flex justify-between items-center hover:bg-sky-50/70 transition group">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-7 h-7 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xs font-black">%</span>
+                    <div class="text-left">
+                        <span class="block text-[10px] font-black uppercase tracking-widest text-slate-900">Coupons &amp; Offers</span>
+                        <span id="cart-coupon-status" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">View available coupons</span>
+                    </div>
+                </div>
+                <span class="text-xs font-black text-sky-600 group-hover:translate-x-0.5 transition">→</span>
+            </button>
+
             <div class="flex justify-between items-end mb-6">
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</p>
@@ -312,6 +324,27 @@
     <!-- MODAL OVERLAYS -->
     <div id="modal-backdrop" class="fixed inset-0 z-[150] hidden bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
         
+        <!-- Coupons Blank Page Modal (Ready for future coupons) -->
+        <div id="modal-coupons" class="hidden bg-white rounded-[2.5rem] max-w-md w-full p-7 sm:p-9 shadow-2xl max-h-[85vh] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+                <div>
+                    <span class="text-[9px] font-black text-sky-600 uppercase tracking-[0.25em] block">HELUX Rewards</span>
+                    <h3 class="text-xl font-black uppercase tracking-tighter text-slate-900">Available Coupons</h3>
+                </div>
+                <button onclick="closeCouponsModal()" class="text-slate-400 text-xl font-bold hover:text-slate-900">✕</button>
+            </div>
+
+            <!-- Blank Coupons Container (Add your coupon cards here later) -->
+            <div id="coupons-list-container" class="min-h-[220px] flex flex-col items-center justify-center text-center py-10 px-4 bg-slate-50/70 rounded-3xl border border-dashed border-slate-200">
+                <span class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-sm font-black text-slate-400 mb-3">%</span>
+                <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">No Coupons Available Right Now</p>
+            </div>
+
+            <button onclick="closeCouponsModal()" class="w-full mt-6 bg-slate-900 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest hover:bg-sky-600 transition">
+                Back to Bag
+            </button>
+        </div>
+
         <!-- Auth Modal (Supabase Sign In + Create Account with Name + Update Name + My Orders) -->
         <div id="modal-auth" class="hidden bg-white rounded-[2.5rem] max-w-md w-full p-7 sm:p-9 shadow-2xl text-center max-h-[88vh] overflow-y-auto no-scrollbar">
             <!-- Logged Out View -->
@@ -418,7 +451,7 @@
                     </div>
                 </div>
                 <button onclick="proceedToQrPayment()" class="w-full bg-emerald-600 text-white font-black py-4.5 rounded-2xl uppercase text-xs tracking-widest shadow-xl mt-4 hover:bg-emerald-700 transition">
-                    Place Order & Pay
+                    Place Order &amp; Pay
                 </button>
             </div>
             <button onclick="closeModal()" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Back to Shopping Bag</button>
@@ -458,7 +491,7 @@
         <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-12">
             <div class="md:col-span-2">
                 <h2 class="text-3xl font-black tracking-tighter mb-4 text-slate-900">HELUX</h2>
-                <p class="text-xs font-medium text-slate-500 leading-relaxed max-w-sm">Botanical seascape formulas designed for deep hydration and natural radiance. Formulated specifically for Indian skin & weather conditions.</p>
+                <p class="text-xs font-medium text-slate-500 leading-relaxed max-w-sm">Botanical seascape formulas designed for deep hydration and natural radiance. Formulated specifically for Indian skin &amp; weather conditions.</p>
             </div>
             <div>
                 <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Collection</h4>
@@ -469,7 +502,7 @@
                 </ul>
             </div>
             <div>
-                <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Help & Info</h4>
+                <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Help &amp; Info</h4>
                 <ul class="space-y-2.5 text-[10px] font-bold uppercase text-slate-400">
                     <li onclick="openModal('track')" class="hover:text-slate-900 cursor-pointer">Track Your Order</li>
                     <li onclick="triggerToast('Express Shipping Active')" class="hover:text-slate-900 cursor-pointer">Shipping Policy</li>
@@ -1131,7 +1164,7 @@
         }
 
         /**
-         * 9. UI UTILITIES, TIMER, DYNAMIC UPI QR & MODAL CONTROLLERS
+         * 9. UI UTILITIES, TIMER, DYNAMIC UPI QR, COUPONS & MODAL CONTROLLERS
          */
         function toggleCartDrawer() {
             document.getElementById('cart-drawer').classList.toggle('translate-x-full');
@@ -1142,6 +1175,22 @@
             toast.innerText = message;
             toast.classList.add('active');
             setTimeout(() => toast.classList.remove('active'), 2500);
+        }
+
+        function openCouponsFromCart() {
+            const drawer = document.getElementById('cart-drawer');
+            if (!drawer.classList.contains('translate-x-full')) {
+                toggleCartDrawer();
+            }
+            openModal('coupons');
+        }
+
+        function closeCouponsModal() {
+            closeModal();
+            const drawer = document.getElementById('cart-drawer');
+            if (drawer.classList.contains('translate-x-full')) {
+                toggleCartDrawer();
+            }
         }
 
         function generateExactUpiPayment(amount) {
@@ -1184,6 +1233,7 @@
         function openModal(modalName) {
             stopQrTimer();
             document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-coupons').classList.add('hidden');
             document.getElementById('modal-auth').classList.add('hidden');
             document.getElementById('modal-track').classList.add('hidden');
             document.getElementById('modal-wishlist').classList.add('hidden');
