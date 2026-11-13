@@ -215,6 +215,7 @@
                 <button onclick="navigateTo('home')" class="nav-btn">Home</button>
                 <button onclick="openModal('auth')" id="desktop-account-btn" class="nav-btn">Account</button>
                 <button onclick="openModal('wishlist')" class="nav-btn">Wishlist (<span id="nav-wishlist-count">0</span>)</button>
+                <button onclick="openModal('track')" class="nav-btn">Track Order</button>
             </nav>
         </div>
 
@@ -229,10 +230,11 @@
     </header>
 
     <!-- Mobile Sub-Header Nav -->
-    <div class="md:hidden flex justify-center gap-2.5 py-2.5 px-4 bg-white/30 backdrop-blur-md border-b border-white/30">
-        <button onclick="navigateTo('home')" class="nav-btn py-1.5 px-4">Home</button>
-        <button onclick="openModal('auth')" id="mobile-account-btn" class="nav-btn py-1.5 px-4">Account</button>
-        <button onclick="openModal('wishlist')" class="nav-btn py-1.5 px-4">Wishlist (<span id="mobile-wishlist-count">0</span>)</button>
+    <div class="md:hidden flex justify-center gap-2 py-2.5 px-3 bg-white/30 backdrop-blur-md border-b border-white/30 overflow-x-auto no-scrollbar">
+        <button onclick="navigateTo('home')" class="nav-btn py-1.5 px-3.5 whitespace-nowrap">Home</button>
+        <button onclick="openModal('auth')" id="mobile-account-btn" class="nav-btn py-1.5 px-3.5 whitespace-nowrap">Account</button>
+        <button onclick="openModal('wishlist')" class="nav-btn py-1.5 px-3.5 whitespace-nowrap">Wishlist (<span id="mobile-wishlist-count">0</span>)</button>
+        <button onclick="openModal('track')" class="nav-btn py-1.5 px-3.5 whitespace-nowrap">Track</button>
     </div>
 
     <!-- HOME VIEW (Grid + Collection Filter) -->
@@ -310,8 +312,8 @@
     <!-- MODAL OVERLAYS -->
     <div id="modal-backdrop" class="fixed inset-0 z-[150] hidden bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4">
         
-        <!-- Auth Modal (Supabase Sign In + Create Account with Name + Update Name) -->
-        <div id="modal-auth" class="hidden bg-white rounded-[2.5rem] max-w-sm w-full p-8 sm:p-10 shadow-2xl text-center">
+        <!-- Auth Modal (Supabase Sign In + Create Account with Name + Update Name + My Orders) -->
+        <div id="modal-auth" class="hidden bg-white rounded-[2.5rem] max-w-md w-full p-7 sm:p-9 shadow-2xl text-center max-h-[88vh] overflow-y-auto no-scrollbar">
             <!-- Logged Out View -->
             <div id="auth-logged-out-view">
                 <h3 class="text-2xl font-black uppercase tracking-tighter mb-2 text-slate-900">Account Access</h3>
@@ -342,10 +344,45 @@
                     </div>
                 </div>
 
+                <!-- Auto-Loaded Orders for Logged-In Account -->
+                <div class="text-left mb-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Your Recent Orders</label>
+                        <button onclick="loadUserAccountOrders()" class="text-[9px] font-black uppercase text-sky-600 tracking-wider">Refresh</button>
+                    </div>
+                    <div id="account-orders-list" class="space-y-2.5 max-h-48 overflow-y-auto no-scrollbar">
+                        <p class="text-[11px] text-slate-400 text-center py-4 bg-slate-50 rounded-2xl">Loading orders...</p>
+                    </div>
+                </div>
+
                 <button onclick="handleSupabaseLogout()" class="w-full bg-red-500 text-white font-black py-4 rounded-2xl uppercase text-xs tracking-widest shadow-lg hover:bg-red-600 transition">Sign Out</button>
             </div>
 
             <button onclick="closeModal()" class="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest block mx-auto">Close</button>
+        </div>
+
+        <!-- Track Order Modal -->
+        <div id="modal-track" class="hidden bg-white rounded-[2.5rem] max-w-md w-full p-7 sm:p-9 shadow-2xl max-h-[88vh] overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-5">
+                <div>
+                    <span class="text-[9px] font-black text-sky-600 uppercase tracking-[0.25em] block">Live Status</span>
+                    <h3 class="text-xl font-black uppercase tracking-tighter text-slate-900">Track Your Order</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 text-xl font-bold">✕</button>
+            </div>
+
+            <p class="text-[11px] font-medium text-slate-500 mb-4">Enter the 10-digit mobile number or Order ID you used at checkout.</p>
+
+            <div class="flex gap-2 mb-5">
+                <input type="text" id="track-search-input" placeholder="PHONE NUMBER OR ORDER ID" onkeydown="if(event.key==='Enter') handleTrackOrderSearch()" class="flex-grow p-3.5 bg-slate-100 rounded-2xl outline-none text-xs font-bold text-slate-900">
+                <button onclick="handleTrackOrderSearch()" id="track-search-btn" class="bg-slate-900 text-white font-black px-5 py-3.5 rounded-2xl uppercase text-[10px] tracking-widest hover:bg-sky-600 transition">
+                    Track
+                </button>
+            </div>
+
+            <div id="track-results-container" class="space-y-3.5">
+                <p class="text-center text-[10px] font-bold uppercase tracking-widest text-slate-300 py-6">Enter details above to check live progress</p>
+            </div>
         </div>
 
         <!-- Wishlist Modal -->
@@ -434,8 +471,8 @@
             <div>
                 <h4 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-900">Help & Info</h4>
                 <ul class="space-y-2.5 text-[10px] font-bold uppercase text-slate-400">
+                    <li onclick="openModal('track')" class="hover:text-slate-900 cursor-pointer">Track Your Order</li>
                     <li onclick="triggerToast('Express Shipping Active')" class="hover:text-slate-900 cursor-pointer">Shipping Policy</li>
-                    <li onclick="triggerToast('UPI Direct Scan Enabled')" class="hover:text-slate-900 cursor-pointer">Secure Payments</li>
                     <li onclick="triggerToast('Support: care@helux.in')" class="hover:text-slate-900 cursor-pointer">Contact Support</li>
                 </ul>
             </div>
@@ -695,6 +732,134 @@
             updateAuthUI();
             closeModal();
             triggerToast("Signed Out");
+        }
+
+        /**
+         * ORDER TRACKING ENGINE (SUPABASE STATUS + TRACKING LINK)
+         */
+        function renderOrderStatusCard(order) {
+            const statusText = (order.status || 'Order Placed').trim();
+            const lower = statusText.toLowerCase();
+
+            let badgeClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+            let stepLevel = 1;
+
+            if (lower.includes('deliver')) {
+                badgeClasses = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                stepLevel = 3;
+            } else if (lower.includes('ship') || lower.includes('transit') || lower.includes('dispatch')) {
+                badgeClasses = 'bg-sky-50 text-sky-700 border-sky-200';
+                stepLevel = 2;
+            }
+
+            const orderDate = order.created_at
+                ? new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                : '';
+
+            const rawLink = (order.tracking_link || '').trim();
+            const hasUrl = rawLink.startsWith('http://') || rawLink.startsWith('https://');
+
+            return `
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-left">
+                <div class="flex justify-between items-start gap-2 mb-2">
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Order #${order.id} ${orderDate ? '• ' + orderDate : ''}</span>
+                        <h4 class="text-xs font-black text-slate-900 mt-0.5">${order.customer_name || 'Customer'}</h4>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider ${badgeClasses}">
+                        ${statusText}
+                    </span>
+                </div>
+
+                <!-- 3-Step Visual Progress Bar -->
+                <div class="grid grid-cols-3 gap-1.5 my-3">
+                    <div class="h-1.5 rounded-full ${stepLevel >= 1 ? 'bg-sky-500' : 'bg-slate-200'}"></div>
+                    <div class="h-1.5 rounded-full ${stepLevel >= 2 ? 'bg-sky-500' : 'bg-slate-200'}"></div>
+                    <div class="h-1.5 rounded-full ${stepLevel >= 3 ? 'bg-emerald-500' : 'bg-slate-200'}"></div>
+                </div>
+                <div class="flex justify-between text-[8px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+                    <span class="${stepLevel >= 1 ? 'text-slate-800' : ''}">Placed</span>
+                    <span class="${stepLevel >= 2 ? 'text-slate-800' : ''}">Shipped</span>
+                    <span class="${stepLevel >= 3 ? 'text-emerald-700' : ''}">Delivered</span>
+                </div>
+
+                <p class="text-[11px] font-bold text-slate-700 leading-snug mb-1.5">${order.items}</p>
+                <p class="text-[10px] text-slate-400 line-clamp-1 mb-2">${order.address}</p>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200/70">
+                    <span class="text-xs font-black text-slate-900">Paid: ₹${order.total_amount}</span>
+                    ${rawLink ? (hasUrl
+                        ? `<a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="bg-sky-600 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-xl hover:bg-sky-700 transition">Track Courier ↗</a>`
+                        : `<span class="text-[10px] font-black text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg">AWB: ${rawLink}</span>`
+                    ) : `<span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tracking updates soon</span>`}
+                </div>
+            </div>`;
+        }
+
+        async function handleTrackOrderSearch() {
+            const rawQuery = document.getElementById('track-search-input').value.trim();
+            const container = document.getElementById('track-results-container');
+            const btn = document.getElementById('track-search-btn');
+
+            if (!rawQuery) {
+                triggerToast("Enter phone number or Order ID");
+                return;
+            }
+
+            btn.innerText = "...";
+            btn.disabled = true;
+            container.innerHTML = `<p class="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 py-6">Searching orders...</p>`;
+
+            const digitsOnly = rawQuery.replace(/\D/g, '');
+            const last10 = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
+
+            let query = db.from('orders').select('*').order('created_at', { ascending: false });
+
+            if (last10.length === 10) {
+                query = query.ilike('phone', `%${last10}%`);
+            } else if (/^\d+$/.test(rawQuery)) {
+                query = query.eq('id', parseInt(rawQuery, 10));
+            } else {
+                query = query.ilike('user_email', rawQuery);
+            }
+
+            const { data, error } = await query;
+
+            btn.innerText = "Track";
+            btn.disabled = false;
+
+            if (error) {
+                console.error(error);
+                container.innerHTML = `<p class="text-center text-xs font-bold text-red-500 py-6">Could not fetch orders right now.</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs font-bold text-slate-400 py-6">No orders found for "${rawQuery}". Check your phone number or Order ID.</p>`;
+                return;
+            }
+
+            container.innerHTML = data.map(renderOrderStatusCard).join('');
+        }
+
+        async function loadUserAccountOrders() {
+            const container = document.getElementById('account-orders-list');
+            if (!STATE.user) return;
+
+            container.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-4 bg-slate-50 rounded-2xl">Loading orders...</p>`;
+
+            const { data, error } = await db
+                .from('orders')
+                .select('*')
+                .eq('user_email', STATE.user.email)
+                .order('created_at', { ascending: false });
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `<p class="text-[11px] font-bold text-slate-400 text-center py-4 bg-slate-50 rounded-2xl">No orders linked to ${STATE.user.email} yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = data.map(renderOrderStatusCard).join('');
         }
 
         function getCartSubtotal() {
@@ -1020,9 +1185,14 @@
             stopQrTimer();
             document.getElementById('modal-backdrop').classList.remove('hidden');
             document.getElementById('modal-auth').classList.add('hidden');
+            document.getElementById('modal-track').classList.add('hidden');
             document.getElementById('modal-wishlist').classList.add('hidden');
             document.getElementById('modal-checkout').classList.add('hidden');
             document.getElementById('modal-qr').classList.add('hidden');
+
+            if (modalName === 'auth' && STATE.user) {
+                loadUserAccountOrders();
+            }
 
             if (modalName === 'wishlist') {
                 renderWishlistModalItems();
@@ -1115,14 +1285,14 @@
             const totalAmount = getCartSubtotal();
 
             // Insert order into Supabase 'orders' table
-            const { error } = await db.from('orders').insert([{
+            const { data, error } = await db.from('orders').insert([{
                 customer_name: name,
                 phone: phone,
                 user_email: STATE.user ? STATE.user.email : 'Guest',
                 address: fullAddress,
                 items: itemsSummary,
                 total_amount: totalAmount
-            }]);
+            }]).select();
 
             btn.innerText = "I Have Paid";
             btn.disabled = false;
@@ -1131,7 +1301,8 @@
                 console.error(error);
                 triggerToast("Order saved locally (Check Supabase orders table)");
             } else {
-                triggerToast("Order Confirmed & Saved! Thank you.");
+                const newOrderId = data && data[0] ? data[0].id : '';
+                triggerToast(newOrderId ? `Order #${newOrderId} Confirmed!` : "Order Confirmed & Saved!");
             }
 
             STATE.cart = {};
